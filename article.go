@@ -11,6 +11,7 @@ import (
 type Article struct {
 	Title           string             `json:"title,omitempty"`
 	CleanedText     string             `json:"content,omitempty"`
+	MarkdownText    string             `json:"markdown,omitempty"`
 	MetaDescription string             `json:"description,omitempty"`
 	MetaLang        string             `json:"lang,omitempty"`
 	MetaFavicon     string             `json:"favicon,omitempty"`

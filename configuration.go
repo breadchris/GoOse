@@ -40,7 +40,7 @@ func GetDefaultConfiguration(args ...string) Configuration {
 			imageMagickConvertPath:  "/usr/bin/convert",  //not used in this version
 			imageMagickIdentifyPath: "/usr/bin/identify", //not used in this version
 			browserUserAgent:        defaultUserAgent,
-			debug:                   false,
+			debug:                   true, // Only for testing
 			extractPublishDate:      true,
 			additionalDataExtractor: false,
 			stopWordsPath:           "resources/stopwords",

@@ -170,6 +170,7 @@ func (c Crawler) Crawl() (*Article, error) {
 	if article.TopNode != nil {
 		article.TopNode = extractor.PostCleanup(article.TopNode)
 
+		article.MarkdownText = extractor.GetMarkdown(article.TopNode, article.MetaLang)
 		article.CleanedText, article.Links = extractor.GetCleanTextAndLinks(article.TopNode, article.MetaLang)
 
 		videoExtractor := NewVideoExtractor()

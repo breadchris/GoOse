@@ -40,6 +40,8 @@ func ValidateArticle(expected Article, removed *[]string) error {
 		return fmt.Errorf("article metaDescription does not match. Got '%q', Expected '%q'", result.MetaDescription, expected.MetaDescription)
 	}
 
+	fmt.Printf("%s\n", result.MarkdownText)
+
 	if !strings.Contains(result.CleanedText, expected.CleanedText) {
 		fmt.Printf("EXPECTED:       %s \n\n\n\nACTUAL:    %s\n\n", expected.CleanedText, result.CleanedText)
 		return fmt.Errorf("article cleanedText does not contain %q", expected.CleanedText)
@@ -1212,6 +1214,25 @@ func TestCharsetISO_8859_1(t *testing.T) {
 	}
 
 	removed := []string{"~~~REMOVED~~~"}
+	err := ValidateArticle(article, &removed)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestMinimalExample(t *testing.T) {
+	article := Article{
+		Domain:          "minimal.com",
+		Title:           "",
+		MetaDescription: "",
+		CleanedText:     "",
+		MetaKeywords:    "",
+		CanonicalLink:   "",
+		TopImage:        "http://localhost",
+	}
+	article.Links = nil
+
+	removed := []string{}
 	err := ValidateArticle(article, &removed)
 	if err != nil {
 		t.Error(err)

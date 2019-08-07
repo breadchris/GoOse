@@ -1,6 +1,7 @@
 package goose
 
 import (
+	"fmt"
 	"bytes"
 	"regexp"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 var normalizeWhitespaceRegexp = regexp.MustCompile(`[ \r\f\v\t]+`)
@@ -42,8 +44,21 @@ func (formatter *outputFormatter) getFormattedText(topNode *goquery.Selection, l
 	formatter.replaceTagsWithText()
 	formatter.removeParagraphsWithFewWords()
 
-	output = formatter.getOutputText()
+	output = formatter.getOutputText(false)
 	return output, links
+}
+
+func (formatter *outputFormatter) getMarkdownText(topNode *goquery.Selection, lang string) (output string) {
+	formatter.topNode = topNode
+	formatter.language = formatter.getLanguage(lang)
+	if formatter.language == "" {
+		formatter.language = formatter.config.targetLanguage
+	}
+	formatter.removeNegativescoresNodes()
+	formatter.replaceTagsWithText()
+
+	output = formatter.getOutputText(true)
+	return output
 }
 
 func (formatter *outputFormatter) convertToText() string {
@@ -115,9 +130,49 @@ func (formatter *outputFormatter) Text(s *goquery.Selection) string {
 	return buf.String()
 }
 
-func (formatter *outputFormatter) getOutputText() string {
-	//out := formatter.topNode.Text()
-	out := formatter.Text(formatter.topNode)
+func (formatter *outputFormatter) Markdown(s *goquery.Selection) string {
+	var buf bytes.Buffer
+
+	// Slightly optimized vs calling Each: no single selection object created
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		switch n.Type {
+		case html.TextNode:
+			if 0 == n.DataAtom { // NB: had to add the DataAtom check to avoid printing text twice when a textual node embeds another textual node
+				// Keep newlines and spaces, like jQuery
+				buf.WriteString(n.Data)
+			}
+		case html.ElementNode:
+			if atom.Img == n.DataAtom {
+				var url string
+				for _, attr := range n.Attr {
+					if attr.Key == "src" {
+						url = attr.Val
+					}
+				}
+				buf.WriteString(fmt.Sprintf("![](%s)", url))
+			}
+		}
+		if n.FirstChild != nil {
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				f(c)
+			}
+		}
+	}
+	for _, n := range s.Nodes {
+		f(n)
+	}
+
+	return buf.String()
+}
+
+func (formatter *outputFormatter) getOutputText(markdown bool) string {
+	var out string
+	if markdown {
+		out = formatter.Markdown(formatter.topNode)
+	} else {
+		out = formatter.Text(formatter.topNode)
+	}
 	out = normalizeWhitespaceRegexp.ReplaceAllString(out, " ")
 
 	strArr := strings.Split(out, "\n")

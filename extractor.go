@@ -355,6 +355,12 @@ func (extr *ContentExtractor) GetCleanTextAndLinks(topNode *goquery.Selection, l
 	return outputFormatter.getFormattedText(topNode, lang)
 }
 
+func (extr *ContentExtractor) GetMarkdown(topNode *goquery.Selection, lang string) string {
+	outputFormatter := new(outputFormatter)
+	outputFormatter.config = extr.config
+	return outputFormatter.getMarkdownText(topNode, lang)
+}
+
 // CalculateBestNode checks for the HTML node most likely to contain the main content.
 //we're going to start looking for where the clusters of paragraphs are. We'll score a cluster based on the number of stopwords
 //and the number of consecutive paragraphs together, which should form the cluster of text that this node is around
@@ -709,7 +715,7 @@ func (extr *ContentExtractor) PostCleanup(targetNode *goquery.Selection) *goquer
 	children := node.Children()
 	children.Each(func(i int, s *goquery.Selection) {
 		tag := s.Get(0).DataAtom.String()
-		if tag != "p" {
+		if tag != "p" && tag != "img" {
 			if extr.config.debug {
 				log.Printf("CLEANUP  NODE: %s class: %s\n", extr.config.parser.name("id", s), extr.config.parser.name("class", s))
 			}
